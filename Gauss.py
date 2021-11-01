@@ -1,7 +1,6 @@
 from numpy import zeros
 import sys
 
-#filename='test_data.txt'
 filename='input.txt'
 with open(filename, encoding='ascii') as file_object:
     lines = file_object.readlines()
