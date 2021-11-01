@@ -1,1 +1,2 @@
 # Python-AI
+university assignments
