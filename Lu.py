@@ -1,6 +1,5 @@
 from numpy import zeros, eye
 
-#filename='test_data.txt'
 filename='input.txt'
 with open(filename, encoding='ascii') as file_object:
     lines = file_object.readlines()
@@ -27,47 +26,17 @@ for idx_i, val_i in enumerate(Mat):
         else:
             Mat2[idx_i][idx_j]=int(Mat[idx_i][idx_j])
 
-if i==3:            
-    #일단 3*3행렬만 생각
-    for idx_i in range(i):
-        for idx_j in range(i):
-            if idx_i == 0:
-                U[idx_i][idx_j]=Mat2[idx_i][idx_j]
-            elif idx_i == 1:
-                if idx_j==0:
-                    L[idx_i][idx_j]=Mat2[idx_i][idx_j]/U[0][idx_j]
-                elif idx_j==1:
-                    U[idx_i][idx_j]=Mat2[idx_i][idx_j]-L[idx_i][0]*U[0][idx_j]
-                else:
-                    U[idx_i][idx_j]=Mat2[idx_i][idx_j]-L[idx_i][0]*U[0][idx_j]
-            else:
-                if idx_j==0:
-                    L[idx_i][idx_j]=Mat2[idx_i][idx_j]/U[0][idx_j]
-                elif idx_j==1:
-                    L[idx_i][idx_j]=(Mat2[idx_i][idx_j]-L[idx_i][0]*U[0][idx_j])/U[1][idx_j]
-                else:
-                    U[idx_i][idx_j]=Mat2[idx_i][idx_j]-L[idx_i][0]*U[0][idx_j]-L[idx_i][1]*U[1][idx_j]
-
-elif i==2:
-    for idx_i in range(i):
-        for idx_j in range(i):
-            if idx_i == 0:
-                U[idx_i][idx_j]=Mat2[idx_i][idx_j]
-            elif idx_i == 1:
-                if idx_j==0:
-                    L[idx_i][idx_j]=Mat2[idx_i][idx_j]/U[0][idx_j]
-                elif idx_j==1:
-                    U[idx_i][idx_j]=Mat2[idx_i][idx_j]-L[idx_i][0]*U[0][idx_j]
-
 for idx_i in range(i):
     for idx_j in range(i):
-        if idx_i==idx_j:
+        U[idx_i][idx_j]=Mat2[idx_i][idx_j]
+        if(idx_i==idx_j):
             L[idx_i][idx_j]=1
-        if(idx_i<idx_j):
-            L[idx_i][idx_j]=0
-        if(idx_i>idx_j):
-            U[idx_i][idx_j]=0
-
+            
+for idx_i in range(i):
+    for idx_j in range(idx_i+1, i):
+        L[idx_j][idx_i]=U[idx_j][idx_i]/U[idx_i][idx_i]
+        for idx_k in range(i):
+            U[idx_j][idx_k] -= (L[idx_j][idx_i]*U[idx_i][idx_k])
 
 print(L)
 print(U)
@@ -87,21 +56,35 @@ for k in range(i):
 out.write("\n")
 
 y=zeros((i,1))
-y[0][0]=b[0][0]
-y[1][0]=b[1][0]-L[1][0]*y[0][0]
-if i==3:
-    y[2][0]=b[2][0]-L[2][0]*y[0][0]-L[2][1]*y[1][0]
+
+def re(L, y, i, k):
+    ret=0
+    for h in range(k):
+        ret += (L[k][h]*y[h][0])
+    return ret
+
+for k in range(i):
+    if k==0:
+        y[k][0]=b[k][0]
+    else:
+        y[k][0]=b[k][0]-re(L,y,i,k)
 
 x=zeros((i,1))
-if i==3:
-    x[2][0]=y[2][0]/U[2][2]
-    x[1][0]=(y[1][0]-U[1][2]*x[2][0])/U[1][1]
-    x[0][0]=(y[0][0]-U[0][1]*x[1][0]-U[0][2]*x[2][0])/U[0][0]
-elif i==2:
-    x[1][0]=y[1][0]/U[1][1]
-    x[0][0]=(y[0][0]-U[0][1]*x[1][0])/U[0][0]
+
+def re2(U, x, i, k):
+    ret=0
+    for h in range(i-1, k, -1):
+        ret = ret+x[h]*U[k][h]
+    return ret
+
+for k in range(i-1,-1,-1): #3 기준 k는 2,1,0
+    if k==i-1:
+        x[k][0]=y[k][0]/U[k][k]
+    else:
+        x[k][0]=(y[k][0]-re2(U,x,i,k))/U[k][k]
 
 print(x)
+        
 for k in range(i):
     out.write(str(x[k][0])) #구하고자 하는 해
     out.write("\n")
